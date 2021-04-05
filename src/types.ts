@@ -3,4 +3,5 @@ export interface ProcessNode {
     name: string;
     electionCount: number;
     time: string;
+    allNodeIds: number[];
 }
