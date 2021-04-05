@@ -6,7 +6,6 @@ import { ProcessNode } from './types';
 const parseAndConstructNode = (line:string) => {
   const split = line.replace(/\s/g, '').split(',');
   const processIdentifiers = split[1].split('_');
-  console.log(processIdentifiers);
   const electionNumberParse = parseInt(processIdentifiers[1], 10);
   const electionCount = Number.isNaN(electionNumberParse) ? 0 : electionNumberParse;
   const node:ProcessNode = {
