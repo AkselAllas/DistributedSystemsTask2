@@ -1,4 +1,11 @@
 {
+    "settings": {
+        "import/resolver": {
+          "node": {
+            "extensions": [".js", ".jsx", ".ts", ".tsx"]
+          }
+        }
+      },
     "env": {
         "browser": true,
         "es2021": true
@@ -15,6 +22,8 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "no-console": "off"
+        "no-console": "off",
+        "import/extensions": "off",
+        "no-unresolved": "off"
     }
 }

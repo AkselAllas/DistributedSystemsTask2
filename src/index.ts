@@ -1,10 +1,8 @@
-import express from 'express';
+import main from './main';
 
-const app = express();
-const port = 3000;
-
-app.get('/', (req, res) => {
-  res.send('Hello World');
-});
-
-app.listen(port, () => console.log(`Listening on port ${port}`));
+try {
+  main();
+} catch (e) {
+  console.error('\x1b[31m', e);
+  process.exit(1);
+}
