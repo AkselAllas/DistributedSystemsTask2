@@ -7,7 +7,7 @@ import {
 import { ProcessNode } from './types';
 import { getIPAddress } from './miscHelpers';
 import getDate from './timeHelpers';
-import { setAllNodesTime } from './nodeHelpers';
+import { postElectionMessage, setAllNodesTime } from './nodeHelpers';
 
 const node:ProcessNode = JSON.parse(process.argv[2]);
 const ipAddress:string = getIPAddress();
@@ -27,9 +27,33 @@ const coordinateNodes = () => {
   }
 };
 
+const startElection = () => {
+  if (node.isElecting === true) {
+    const higherNodeIds = node.allNodeIds.filter((nodeId) => nodeId > node.id);
+    let higherNodesCounter = 0;
+    higherNodeIds.forEach(async (nodeId) => {
+      const statusCode = await postElectionMessage(nodeId, node);
+      if (statusCode === 200) {
+        console.log('MonkaTOS');
+        higherNodesCounter += 1;
+        node.isElecting = false;
+      }
+    });
+    // TODO fix hack around awaiting ElectionMessage status codes.Currently 2000ms is as timeout.
+    setTimeout(() => {
+      if (higherNodesCounter === 0) {
+        console.log(`node ${node.id} is now the coordinator`);
+        node.isCoordinator = true;
+        node.isElecting = false;
+      }
+    }, 2000);
+  }
+};
+
 // TODO: Set interval from 5000ms to 60000ms after debugging finished
 setInterval(makeNodeClockTick, 5000);
 setInterval(coordinateNodes, 1000);
+setInterval(startElection, 5000);
 
 console.log(node);
 console.log(ipAddress);
@@ -70,6 +94,13 @@ app.post('/isCoordinator', (req, res) => {
     node.isCoordinator = isCoordinator;
   }
 });
+app.post('/isElecting', (req, res) => {
+  if (!frozen) {
+    const { isElecting } = req.body;
+    res.send(`old isElecting: ${node.isElecting} \n new isElecting: ${isElecting}`);
+    node.isElecting = isElecting;
+  }
+});
 app.post('/electionCount', (req, res) => {
   if (!frozen) {
     const { electionCount } = req.body;
@@ -80,7 +111,7 @@ app.post('/electionCount', (req, res) => {
 app.post('/allNodeIds', (req, res) => {
   if (!frozen) {
     const { allNodeIds } = req.body;
-    res.send(`old Time: ${node.allNodeIds} \n new Time: ${allNodeIds}`);
+    res.send(`old NodeIds: ${node.allNodeIds} \n new NodeIds: ${allNodeIds}`);
     node.allNodeIds = allNodeIds;
   }
 });

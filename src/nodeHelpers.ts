@@ -17,3 +17,7 @@ export const setAllNodesTime = (node:ProcessNode) => {
 export const getNode = async (node:ProcessNode) => requestify
   .get(`http://172.13.42.${node.id}:3000/`)
   .then(async (response:any) => response.getBody());
+
+export const postElectionMessage = async (nodeId:number, node:ProcessNode) => requestify
+  .post(`http://172.13.42.${nodeId}:3000/isElecting`, node)
+  .then(async (response:any) => response.getCode());
