@@ -24,7 +24,7 @@ export const getIPAddress = () => {
   return '0.0.0.0';
 };
 
-export const generateRange = (start:any, end:any) => {
-  const length = end - start;
-  return Array.from({ length }, (_, i) => start + i);
-};
+// export const generateRange = (start:any, end:any) => {
+//  const length = end - start;
+//  return Array.from({ length }, (_, i) => start + i);
+// };

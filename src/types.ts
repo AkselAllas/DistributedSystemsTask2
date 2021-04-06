@@ -4,4 +4,5 @@ export interface ProcessNode {
     electionCount: number;
     time: string;
     allNodeIds: number[];
+    isCoordinator: boolean;
 }

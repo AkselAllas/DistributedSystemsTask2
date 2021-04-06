@@ -5,7 +5,7 @@ import {
   format, addMinutes,
 } from 'date-fns';
 import { ProcessNode } from './types';
-import { getIPAddress } from './helperFunctions';
+import { getIPAddress } from './miscHelpers';
 import getDate from './timeHelpers';
 
 const node:ProcessNode = JSON.parse(process.argv[2]);
@@ -19,8 +19,8 @@ const makeNodeClockTick = () => {
     node.time = format(d, 'K:mmaaa');
   }
 };
-// TODO: Set interval from 1000ms to 60000ms after debugging finished
-setInterval(makeNodeClockTick, 1000);
+// TODO: Set interval from 5000ms to 60000ms after debugging finished
+setInterval(makeNodeClockTick, 5000);
 
 console.log(node);
 console.log(ipAddress);
@@ -39,6 +39,11 @@ app.post('/time', (req, res) => {
   res.send(`old Time: ${node.time} \n new Time: ${time}`);
   node.time = time;
 });
+app.post('/isCoordinator', (req, res) => {
+  const { isCoordinator } = req.body;
+  res.send(`old isCoordinator: ${node.isCoordinator} \n new isCoordinator: ${isCoordinator}`);
+  node.isCoordinator = isCoordinator;
+});
 app.post('/electionCount', (req, res) => {
   const { electionCount } = req.body;
   res.send(`old Time: ${node.electionCount} \n new Time: ${electionCount}`);
@@ -51,5 +56,5 @@ app.post('/allNodeIds', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`App listening at http://localhost:${port}`);
+  console.log(`App listening at http://${ipAddress}:${port}`);
 });

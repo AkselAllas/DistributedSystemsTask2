@@ -14,11 +14,12 @@ const parseAndConstructNode = (line:string) => {
     electionCount,
     time: split[2],
     allNodeIds: [0],
+    isCoordinator: false,
   };
   return node;
 };
 
-const getAllNodeIds = (properties: ProcessNode[]) => {
+const parseAllNodeIds = (properties: ProcessNode[]) => {
   const allNodeIds:number[] = [];
   properties.forEach((node) => {
     allNodeIds.push(node.id);
@@ -45,7 +46,7 @@ const readPropertiesFromFile = async (path: fs.PathLike) => {
     initialProperties.push(nodeInfo);
   });
 
-  const allNodeIds = getAllNodeIds(initialProperties);
+  const allNodeIds = parseAllNodeIds(initialProperties);
   const correctProperties = addCorrectAllNodeIdsToProperties(initialProperties, allNodeIds);
 
   return correctProperties;
