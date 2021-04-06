@@ -17,18 +17,11 @@ export const createDockerContainer = async (node: ProcessNode) => {
   }
 };
 export const stopAndRemoveAllDockerContainers = () => {
+  console.log('Stopping and removing all dst2 docker containers');
   exec(
     'docker container stop $(docker container ls -a --filter name=dst2-) ; docker container rm $(docker container ls -a --filter name=dst2-)',
-    (error, stdout, stderr) => {
-      if (error) {
-        console.log(`error: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        console.log(`stderr: ${stderr}`);
-        return;
-      }
-      console.log(`output: ${stdout}`);
+    () => {
+      console.log('Docker containers removed');
     },
   );
 };
