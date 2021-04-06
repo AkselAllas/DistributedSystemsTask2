@@ -15,6 +15,7 @@ const parseAndConstructNode = (line:string) => {
     time: split[2],
     allNodeIds: [0],
     isCoordinator: false,
+    isElecting: false,
   };
   return node;
 };

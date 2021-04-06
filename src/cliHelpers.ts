@@ -37,10 +37,11 @@ const recursiveUserInput = (rl:any, sortedNodeIds:number[]) => {
       postNodeTime(parseInt(args[1], 10), {
         id: 1,
         name: '',
+        time: args[2],
         electionCount: 0,
         allNodeIds: sortedNodeIds,
         isCoordinator: false,
-        time: args[2],
+        isElecting: false,
       });
     }
     recursiveUserInput(rl, sortedNodeIds);

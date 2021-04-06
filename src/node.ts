@@ -40,12 +40,22 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
-  if (!frozen) {
-    res.send(node);
-  }
+  res.send(node);
 });
 
+let heartbeatCounter = 0;
+const resetHeartbeatCounter = () => {
+  if (heartbeatCounter === 0) {
+    node.isElecting = true;
+  }
+  heartbeatCounter = 0;
+};
+
+setTimeout(() => {
+  setInterval(resetHeartbeatCounter, 5000);
+}, 10000);
 app.post('/time', (req, res) => {
+  heartbeatCounter += 1;
   if (!frozen) {
     const { time } = req.body;
     res.send(`old Time: ${node.time} \n new Time: ${time}`);
