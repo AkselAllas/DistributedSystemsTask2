@@ -8,7 +8,9 @@ const main = async () => {
   const biggestProcessId = properties[0].allNodeIds.sort((a, b) => b - a)[0];
   await Promise.all(properties.map((node) => createDockerContainer(node)));
 
-  postNodeIsCoordinator({ ...nodeById(properties, biggestProcessId), isCoordinator: true });
+  setTimeout(() => {
+    postNodeIsCoordinator({ ...nodeById(properties, biggestProcessId), isCoordinator: true });
+  }, 500);
   console.log('Coordinator is node with processId: ', biggestProcessId);
 };
 
