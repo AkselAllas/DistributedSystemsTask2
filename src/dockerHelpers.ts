@@ -16,7 +16,7 @@ export const createDockerContainer = async (node: ProcessNode) => {
     console.log(`${node.id} is already running`);
   }
 };
-export const stopAndRemoveAllDHTDockerContainers = () => {
+export const stopAndRemoveAllDockerContainers = () => {
   exec(
     'docker container stop $(docker container ls -a --filter name=dst2-) ; docker container rm $(docker container ls -a --filter name=dst2-)',
     (error, stdout, stderr) => {
