@@ -1,7 +1,7 @@
 import { createDockerContainer } from './dockerHelpers';
 import readPropertiesFromFile from './readPropertiesFromFile';
 import { ProcessNode } from './types';
-import { nodeById, postNodeIsCoordinator } from './mainHelpers';
+import { nodeById, postNodeIsCoordinator, postNodeTime } from './mainHelpers';
 import { createCLI } from './cliHelpers';
 
 const main = async () => {
@@ -12,6 +12,7 @@ const main = async () => {
 
   setTimeout(() => {
     postNodeIsCoordinator({ ...nodeById(properties, biggestProcessId), isCoordinator: true });
+    postNodeTime(nodeById(properties, biggestProcessId));
   }, 1000);
   console.log('Coordinator is node with processId: ', biggestProcessId);
   createCLI(sortedNodeIds);

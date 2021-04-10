@@ -10,6 +10,9 @@ export const nodeById = (
 export const postNodeIsCoordinator = (node: ProcessNode) => {
   requestify.post(`http://172.13.42.${node.id}:3000/isCoordinator`, node);
 };
+export const postNodeTime = (node: ProcessNode) => {
+  requestify.post(`http://172.13.42.${node.id}:3000/Time`, node);
+};
 
 export const getNode = async (nodeId:number) => requestify
   .get(`http://172.13.42.${nodeId}:3000/`, { timeout: 500 })
