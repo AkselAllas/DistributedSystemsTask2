@@ -12,7 +12,7 @@ export const postNodeIsCoordinator = (node: ProcessNode) => {
 };
 
 export const getNode = async (nodeId:number) => requestify
-  .get(`http://172.13.42.${nodeId}:3000/`)
+  .get(`http://172.13.42.${nodeId}:3000/`, { timeout: 500 })
   .then(async (response:any) => response.getBody());
 
 export const list = async (allNodeIds:number[]) => {
