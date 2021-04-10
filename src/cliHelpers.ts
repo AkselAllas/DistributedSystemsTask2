@@ -3,7 +3,7 @@
 
 import readline from 'readline';
 import {
-  stopAndRemoveAllDockerContainers,
+  stopAndRemoveAllDockerContainers, stopAndRemoveDocker,
 } from './dockerHelpers';
 import { clock, list } from './mainHelpers';
 import { postNodeTime } from './nodeHelpers';
@@ -15,6 +15,7 @@ export const helpReadme = () => {
   console.log('list');
   console.log('clock');
   console.log('set-time 1 8:00pm');
+  console.log('kill 1');
   console.log('-----------------------------');
 };
 
@@ -42,7 +43,11 @@ const recursiveUserInput = (rl:any, sortedNodeIds:number[]) => {
         allNodeIds: sortedNodeIds,
         isCoordinator: false,
         isElecting: false,
+        originalTime: args[2],
       });
+    }
+    if (args[0] === 'kill') {
+      stopAndRemoveDocker(args[1]);
     }
     recursiveUserInput(rl, sortedNodeIds);
   });

@@ -28,19 +28,26 @@ const coordinateNodes = () => {
 };
 
 const startElection = () => {
+  console.log('STARTING ELECTION');
   if (node.isElecting === true) {
+    node.time = node.originalTime;
     const higherNodeIds = node.allNodeIds.filter((nodeId) => nodeId > node.id);
     let higherNodesCounter = 0;
     higherNodeIds.forEach(async (nodeId) => {
-      const statusCode = await postElectionMessage(nodeId, node);
-      if (statusCode === 200) {
-        console.log('MonkaTOS');
-        higherNodesCounter += 1;
-        node.isElecting = false;
+      try {
+        const statusCode = await postElectionMessage(nodeId, node);
+        if (statusCode === 200) {
+          console.log('GOT 200 from higher node');
+          higherNodesCounter += 1;
+          node.isElecting = false;
+        }
+      } catch (e) {
+        console.log(`Node ${nodeId} is unresponsive`);
       }
     });
     // TODO fix hack around awaiting ElectionMessage status codes.Currently 2000ms is as timeout.
     setTimeout(() => {
+      console.log('In SetTimeout');
       if (higherNodesCounter === 0) {
         console.log(`node ${node.id} is now the coordinator`);
         node.isCoordinator = true;
@@ -53,7 +60,7 @@ const startElection = () => {
 // TODO: Set interval from 5000ms to 60000ms after debugging finished
 setInterval(makeNodeClockTick, 5000);
 setInterval(coordinateNodes, 1000);
-setInterval(startElection, 5000);
+setInterval(startElection, 20000);
 
 console.log(node);
 console.log(ipAddress);
@@ -68,7 +75,7 @@ app.get('/', (req, res) => {
 });
 
 let heartbeatCounter = 0;
-const resetHeartbeatCounter = () => {
+const checkHeartBeat = () => {
   if (heartbeatCounter === 0) {
     node.isElecting = true;
   }
@@ -76,7 +83,7 @@ const resetHeartbeatCounter = () => {
 };
 
 setTimeout(() => {
-  setInterval(resetHeartbeatCounter, 5000);
+  setInterval(checkHeartBeat, 5000);
 }, 10000);
 app.post('/time', (req, res) => {
   heartbeatCounter += 1;

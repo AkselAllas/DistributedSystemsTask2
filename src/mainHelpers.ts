@@ -16,15 +16,23 @@ export const getNode = async (nodeId:number) => requestify
   .then(async (response:any) => response.getBody());
 
 export const list = async (allNodeIds:number[]) => {
-  for (let i = 0; i < allNodeIds.length; i += 1) {
-    const node:ProcessNode = await getNode(allNodeIds[i]);
-    console.log(`${node.id}, ${node.name}_${node.electionCount} ${node.isCoordinator ? '(Coordinator)' : ''}`);
-  }
+  allNodeIds.forEach(async (nodeId) => {
+    try {
+      const node:ProcessNode = await getNode(nodeId);
+      console.log(`${node.id}, ${node.name}_${node.electionCount} ${node.isCoordinator ? '(Coordinator)' : ''}`);
+    } catch (e) {
+      console.log(`Node ${nodeId} is unresponsive`);
+    }
+  });
 };
 
 export const clock = async (allNodeIds:number[]) => {
-  for (let i = 0; i < allNodeIds.length; i += 1) {
-    const node:ProcessNode = await getNode(allNodeIds[i]);
-    console.log(`${node.name}_${node.electionCount}, ${node.time}`);
-  }
+  allNodeIds.forEach(async (nodeId) => {
+    try {
+      const node:ProcessNode = await getNode(nodeId);
+      console.log(`${node.name}_${node.electionCount}, ${node.time}`);
+    } catch (e) {
+      console.log(`Node ${nodeId} is unresponsive`);
+    }
+  });
 };

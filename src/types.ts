@@ -6,4 +6,5 @@ export interface ProcessNode {
     allNodeIds: number[];
     isCoordinator: boolean;
     isElecting: boolean;
+    originalTime: string;
 }

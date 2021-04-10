@@ -9,7 +9,7 @@ const asyncExec:Function = BluebirdPromise.promisify(exec);
 export const createDockerContainer = async (node: ProcessNode) => {
   try {
     await asyncExec(
-      `export JSON={\\"id\\":${node.id},\\"name\\":\\"${node.name}\\",\\"electionCount\\":${node.electionCount},\\"time\\":\\"${node.time}\\",\\"allNodeIds\\":[${node.allNodeIds}],\\"isCoordinator\\":${node.isCoordinator},\\"isElecting\\":${node.isElecting}} ; docker run --network dst2 --ip 172.13.42.${node.id} --name dst2-${node.id} -dit dst2 /usr/local/bin/node /app/src/node.js $JSON`,
+      `export JSON={\\"id\\":${node.id},\\"name\\":\\"${node.name}\\",\\"electionCount\\":${node.electionCount},\\"time\\":\\"${node.time}\\",\\"allNodeIds\\":[${node.allNodeIds}],\\"isCoordinator\\":${node.isCoordinator},\\"isElecting\\":${node.isElecting},\\"time\\":\\"${node.time}\\"} ; docker run --network dst2 --ip 172.13.42.${node.id} --name dst2-${node.id} -dit dst2 /usr/local/bin/node /app/src/node.js $JSON`,
     );
     console.log('Started node with id: ', node.id);
   } catch (e) {
@@ -23,6 +23,21 @@ export const stopAndRemoveAllDockerContainers = () => {
     () => {
       setTimeout(() => {
         console.log('Docker containers removed');
+      }, 2000);
+    },
+  );
+};
+
+export const stopAndRemoveDocker = (id:number) => {
+  console.log(`Stopping and removing docker container with id: ${id}`);
+  exec(
+    `docker container stop $(docker container ls -a --filter name=dst2-${id}) ; docker container rm $(docker container ls -a --filter name=dst2-${id})`,
+    (error, stdout, stdin) => {
+      setTimeout(() => {
+        console.log(`Docker container ${id} removed`);
+        console.log('error', error);
+        console.log('stdout', stdout);
+        console.log('stdin', stdin);
       }, 2000);
     },
   );

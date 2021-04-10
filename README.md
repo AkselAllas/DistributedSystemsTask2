@@ -6,3 +6,4 @@
 2. yarn install
 3. yarn build
 4. docker build . -t dst2 
+5. yarn start
