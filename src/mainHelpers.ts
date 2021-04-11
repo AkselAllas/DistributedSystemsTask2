@@ -96,10 +96,9 @@ export const reload = async () => {
   setTimeout(() => {
     postNodeIsCoordinator({ ...nodeById(properties, biggestProcessId), isCoordinator: true });
     postNodeTime(nodeById(properties, biggestProcessId));
-  }, 1000);
+    postAllAllNodeIds(nodeById(properties, biggestProcessId));
+  }, 1500);
   console.log('Coordinator is node with processId: ', biggestProcessId);
-
-  postAllAllNodeIds(nodeById(properties, biggestProcessId));
 
   return sortedNodeIds;
 };
