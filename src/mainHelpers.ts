@@ -4,6 +4,11 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { ProcessNode } from './types';
 
+import readPropertiesFromFile from './readPropertiesFromFile';
+
+import { getIPAddress } from './miscHelpers';
+import { createDockerContainer } from './dockerHelpers';
+
 export const nodeById = (
   properties: ProcessNode[],
   id: number,
@@ -62,4 +67,19 @@ export const postFreeze = (nodeId: string) => {
 
 export const postUnFreeze = (nodeId: string) => {
   requestify.post(`http://172.13.42.${nodeId}:3000/unfreeze`);
+};
+
+export const reload = async () => {
+  const ipAddress:string = getIPAddress();
+  const properties:ProcessNode[] = await readPropertiesFromFile(process.argv[2], ipAddress);
+  const sortedNodeIds = properties[0].allNodeIds.sort((a, b) => b - a);
+  const biggestProcessId = sortedNodeIds[0];
+  await Promise.all(properties.map((node) => createDockerContainer(node)));
+
+  setTimeout(() => {
+    postNodeIsCoordinator({ ...nodeById(properties, biggestProcessId), isCoordinator: true });
+    postNodeTime(nodeById(properties, biggestProcessId));
+  }, 1000);
+  console.log('Coordinator is node with processId: ', biggestProcessId);
+  return sortedNodeIds;
 };
