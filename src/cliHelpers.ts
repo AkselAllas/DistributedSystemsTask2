@@ -6,7 +6,7 @@ import {
   stopAndRemoveAllDockerContainers, stopAndRemoveDocker,
 } from './dockerHelpers';
 import {
-  clock, list, postFreeze, postUnFreeze,
+  clock, list, postFreeze, postUnFreeze, reload,
 } from './mainHelpers';
 import { postNodeTime } from './nodeHelpers';
 
@@ -20,11 +20,12 @@ export const helpReadme = () => {
   console.log('kill 1');
   console.log('freeze 3');
   console.log('unfreeze 5');
+  console.log('reload');
   console.log('-----------------------------');
 };
 
 const recursiveUserInput = (rl:any, sortedNodeIds:number[]) => {
-  rl.question('', (answer:any) => {
+  rl.question('', async (answer:any) => {
     const args = answer.split(' ');
     if (args[0] === 'help') {
       helpReadme();
@@ -58,6 +59,11 @@ const recursiveUserInput = (rl:any, sortedNodeIds:number[]) => {
     }
     if (args[0] === 'unfreeze') {
       postUnFreeze(args[1]);
+    }
+    if (args[0] === 'reload') {
+      const newSortedNodeIds:number[] = await reload();
+      recursiveUserInput(rl, newSortedNodeIds);
+      return;
     }
     recursiveUserInput(rl, sortedNodeIds);
   });

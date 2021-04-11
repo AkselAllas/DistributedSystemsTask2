@@ -7,7 +7,7 @@ import { ProcessNode } from './types';
 import readPropertiesFromFile from './readPropertiesFromFile';
 
 import { getIPAddress } from './miscHelpers';
-import { createDockerContainer } from './dockerHelpers';
+import { createDockerContainer, stopAndRemoveDocker } from './dockerHelpers';
 
 export const nodeById = (
   properties: ProcessNode[],
@@ -69,6 +69,23 @@ export const postUnFreeze = (nodeId: string) => {
   requestify.post(`http://172.13.42.${nodeId}:3000/unfreeze`);
 };
 
+export const postNodeAllNodeIds = (nodeId: number, node: ProcessNode) => {
+  requestify.post(`http://172.13.42.${nodeId}:3000/allNodeIds`, node);
+};
+
+export const postAllAllNodeIds = async (node:ProcessNode) => {
+  const oldNode:ProcessNode = await getNode(node.id);
+  const difference = oldNode.allNodeIds.filter((x) => !node.allNodeIds.includes(x));
+  node.allNodeIds.forEach((nodeId) => {
+    if (nodeId !== node.id) {
+      postNodeAllNodeIds(nodeId, node);
+    }
+  });
+  difference.forEach((nodeId) => {
+    stopAndRemoveDocker(nodeId);
+  });
+};
+
 export const reload = async () => {
   const ipAddress:string = getIPAddress();
   const properties:ProcessNode[] = await readPropertiesFromFile(process.argv[2], ipAddress);
@@ -81,5 +98,8 @@ export const reload = async () => {
     postNodeTime(nodeById(properties, biggestProcessId));
   }, 1000);
   console.log('Coordinator is node with processId: ', biggestProcessId);
+
+  postAllAllNodeIds(nodeById(properties, biggestProcessId));
+
   return sortedNodeIds;
 };
