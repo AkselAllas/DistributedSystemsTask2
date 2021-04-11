@@ -24,6 +24,7 @@
     "rules": {
         "no-console": "off",
         "import/extensions": "off",
-        "no-unresolved": "off"
+        "no-unresolved": "off",
+        "max-len": "off"
     }
 }

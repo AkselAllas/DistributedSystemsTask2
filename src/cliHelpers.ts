@@ -5,7 +5,9 @@ import readline from 'readline';
 import {
   stopAndRemoveAllDockerContainers, stopAndRemoveDocker,
 } from './dockerHelpers';
-import { clock, list } from './mainHelpers';
+import {
+  clock, list, postFreeze, postUnFreeze,
+} from './mainHelpers';
 import { postNodeTime } from './nodeHelpers';
 
 export const helpReadme = () => {
@@ -16,6 +18,8 @@ export const helpReadme = () => {
   console.log('clock');
   console.log('set-time 1 8:00pm');
   console.log('kill 1');
+  console.log('freeze 3');
+  console.log('unfreeze 5');
   console.log('-----------------------------');
 };
 
@@ -48,6 +52,12 @@ const recursiveUserInput = (rl:any, sortedNodeIds:number[]) => {
     }
     if (args[0] === 'kill') {
       stopAndRemoveDocker(args[1]);
+    }
+    if (args[0] === 'freeze') {
+      postFreeze(args[1]);
+    }
+    if (args[0] === 'unfreeze') {
+      postUnFreeze(args[1]);
     }
     recursiveUserInput(rl, sortedNodeIds);
   });

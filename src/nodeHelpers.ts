@@ -36,6 +36,17 @@ export const postAllElectionStartedBy = (node:ProcessNode) => {
   });
 };
 
+export const postNodeIsCoordinator = (nodeId:number, node:any) => {
+  requestify.post(`http://172.13.42.${nodeId}:3000/isCoordinator`, node);
+};
+export const postAllIsCoordinator = (node:ProcessNode) => {
+  node.allNodeIds.forEach((nodeId) => {
+    if (nodeId !== node.id) {
+      postNodeIsCoordinator(nodeId, { ...node, isCoordinator: false });
+    }
+  });
+};
+
 export const getNode = async (node:ProcessNode) => requestify
   .get(`http://172.13.42.${node.id}:3000/`)
   .then(async (response:any) => response.getBody());

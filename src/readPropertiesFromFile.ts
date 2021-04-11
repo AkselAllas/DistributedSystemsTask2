@@ -19,6 +19,7 @@ const parseAndConstructNode = (line:string, mainProcessIpAddress:string) => {
     originalTime: split[2],
     electionStartedBy: -1,
     mainProcessIpAddress,
+    isFrozen: false,
   };
   return node;
 };

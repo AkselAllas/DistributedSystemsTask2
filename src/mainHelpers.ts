@@ -24,7 +24,7 @@ export const list = async (allNodeIds:number[]) => {
   allNodeIds.forEach(async (nodeId) => {
     try {
       const node:ProcessNode = await getNode(nodeId);
-      console.log(`${node.id}, ${node.name}_${node.electionCount} ${node.isCoordinator ? '(Coordinator)' : ''}`);
+      console.log(`${node.id}, ${node.name}_${node.electionCount} ${node.isCoordinator ? '(Coordinator)' : ''} ${node.isFrozen ? '(Frozen)' : ''}`);
     } catch (e) {
       console.log(`Node ${nodeId} is unresponsive`);
     }
@@ -54,4 +54,12 @@ export const listenForNodeMessages = () => {
   });
   app.listen(port, () => {
   });
+};
+
+export const postFreeze = (nodeId: string) => {
+  requestify.post(`http://172.13.42.${nodeId}:3000/freeze`);
+};
+
+export const postUnFreeze = (nodeId: string) => {
+  requestify.post(`http://172.13.42.${nodeId}:3000/unfreeze`);
 };

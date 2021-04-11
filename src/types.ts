@@ -9,4 +9,5 @@ export interface ProcessNode {
     originalTime: string;
     electionStartedBy: number;
     mainProcessIpAddress: string;
+    isFrozen: boolean;
 }

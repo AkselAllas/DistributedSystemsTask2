@@ -2,31 +2,33 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import {
-  format, addMinutes,
+  format, addMinutes, differenceInMilliseconds,
 } from 'date-fns';
 import { ProcessNode } from './types';
 import { getIPAddress } from './miscHelpers';
 import getDate from './timeHelpers';
 import {
   incrementAllNodeElectionCounts, postAllElectionStartedBy,
+  postAllIsCoordinator,
   postElectionMessage, postMainProcessInfo, setAllNodesTime,
 } from './nodeHelpers';
+import { postNodeIsCoordinator, postNodeTime } from './mainHelpers';
 
 const node:ProcessNode = JSON.parse(process.argv[2]);
+let latestElectionTime = new Date();
 const ipAddress:string = getIPAddress();
-const isfrozen:boolean = false;
 let heartbeatCounter = 0;
 
 let d = getDate(node.time);
 const makeNodeClockTick = () => {
-  if (!isfrozen && node.isCoordinator) {
+  if (!node.isFrozen && node.isCoordinator) {
     d = addMinutes(d, 1);
     node.time = format(d, 'K:mmaaa');
   }
 };
 
 const coordinateNodes = () => {
-  if (node.isCoordinator === true && !isfrozen) {
+  if (node.isCoordinator === true && !node.isFrozen) {
     heartbeatCounter += 1;
     setAllNodesTime(node);
     postAllElectionStartedBy({ ...node, electionStartedBy: -1 });
@@ -41,14 +43,18 @@ const declareElectionEnded = () => {
   node.electionStartedBy = -1;
   incrementAllNodeElectionCounts(node);
   postAllElectionStartedBy({ ...node, electionStartedBy: -1 });
+  postAllIsCoordinator({ ...node, electionStartedBy: -1 });
 };
 
+const hasMoreThan5SecPassedFromLastElection = () => differenceInMilliseconds(new Date(), latestElectionTime) > 5000;
 const startElection = () => {
   node.electionStartedBy = node.id;
   postAllElectionStartedBy(node);
 };
 const handleElection = () => {
-  if (node.isElecting === true && !isfrozen) {
+  if (node.isElecting === true && !node.isFrozen && hasMoreThan5SecPassedFromLastElection()) {
+    console.log(`${Date.now()} Starting election: ${JSON.stringify(node)}`);
+    latestElectionTime = new Date();
     if (node.electionStartedBy === -1) {
       startElection();
     }
@@ -77,10 +83,29 @@ const handleElection = () => {
   }
 };
 
+const checkHeartBeat = () => {
+  console.log(`Iam node ${node.id}, heartbeatCounter ${heartbeatCounter}, date: ${Date.now()}`);
+  if ((heartbeatCounter === 0 || node.isElecting === true) && hasMoreThan5SecPassedFromLastElection()) {
+    node.isElecting = true;
+    handleElection();
+  }
+  heartbeatCounter = 0;
+};
+
+const handleMultipleCoordinators = () => {
+  if (node.isCoordinator && node.electionStartedBy !== -1) {
+    console.log(`${Date.now()} HANDLING MULTIPLE COORDINATORS ${JSON.stringify(node)}`);
+
+    node.isElecting = true;
+  }
+};
+
 // TODO: Set interval from 5000ms to 60000ms after debugging finished
-setInterval(makeNodeClockTick, 5000);
+setInterval(makeNodeClockTick, 1000);
 setInterval(coordinateNodes, 1000);
-setInterval(handleElection, 1000);
+setTimeout(() => {
+  setInterval(checkHeartBeat, 2000);
+}, 2000);
 
 const app = express();
 const port = 3000;
@@ -91,28 +116,12 @@ app.get('/', (req, res) => {
   res.send(node);
 });
 
-const checkHeartBeat = () => {
-  if (heartbeatCounter === 0) {
-    node.isElecting = true;
-  }
-  heartbeatCounter = 0;
-};
-
-const handleMultipleCoordinators = () => {
-  if (node.isCoordinator) {
-    node.isElecting = true;
-  }
-};
-
-setTimeout(() => {
-  setInterval(checkHeartBeat, 10000);
-}, 5000 + node.id * 2000);
 app.post('/time', (req, res) => {
-  if (!isfrozen) {
+  if (!node.isFrozen) {
     const { isFromNode, time } = req.body;
     if (isFromNode) {
       heartbeatCounter += 1;
-      handleMultipleCoordinators();
+      if (hasMoreThan5SecPassedFromLastElection()) handleMultipleCoordinators();
     }
     res.send(`old Time: ${node.time} \n new Time: ${time}`);
     node.time = time;
@@ -120,34 +129,47 @@ app.post('/time', (req, res) => {
   }
 });
 app.post('/isCoordinator', (req, res) => {
-  if (!isfrozen) {
+  if (!node.isFrozen) {
     const { isCoordinator } = req.body;
     res.send(`old isCoordinator: ${node.isCoordinator} \n new isCoordinator: ${isCoordinator}`);
     node.isCoordinator = isCoordinator;
   }
 });
 app.post('/isElecting', (req, res) => {
-  if (!isfrozen) {
+  if (!node.isFrozen) {
     const { isElecting } = req.body;
     res.send(`old isElecting: ${node.isElecting} \n new isElecting: ${isElecting}`);
-    node.isElecting = isElecting;
+    console.log(`${Date.now()} I GOT SET electing from ${JSON.stringify(req.connection.remoteAddress)} and node is: ${JSON.stringify(node)}`);
+    if (hasMoreThan5SecPassedFromLastElection()) {
+      node.isElecting = isElecting;
+    }
   }
 });
 app.post('/incrementElectionCount', (req, res) => {
-  if (!isfrozen && node.electionStartedBy !== -1) {
+  if (!node.isFrozen && node.electionStartedBy !== -1) {
     res.send(`incremented ElectionCount to ${node.electionCount + 1}`);
     node.electionCount += 1;
   }
 });
 app.post('/electionStartedBy', (req, res) => {
-  if (!isfrozen && node.electionStartedBy === -1) {
+  if (!node.isFrozen && node.electionStartedBy === -1) {
     const { electionStartedBy } = req.body;
     res.send(`old electionStartedBy: ${node.electionStartedBy} \n new electionStartedBy: ${electionStartedBy}`);
     node.electionStartedBy = electionStartedBy;
   }
 });
+app.post('/freeze', () => {
+  console.log(`${Date.now()} freeze`);
+  node.isFrozen = true;
+});
+app.post('/unfreeze', () => {
+  console.log(`${Date.now()} unfreeze`);
+  node.isFrozen = false;
+  postNodeIsCoordinator({ ...node, isCoordinator: true });
+  postNodeTime({ ...node, time: node.originalTime });
+});
 app.post('/allNodeIds', (req, res) => {
-  if (!isfrozen) {
+  if (!node.isFrozen) {
     const { allNodeIds } = req.body;
     res.send(`old NodeIds: ${node.allNodeIds} \n new NodeIds: ${allNodeIds}`);
     node.allNodeIds = allNodeIds;
