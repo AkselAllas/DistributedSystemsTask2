@@ -7,7 +7,10 @@ import {
 import { ProcessNode } from './types';
 import { getIPAddress } from './miscHelpers';
 import getDate from './timeHelpers';
-import { postElectionMessage, setAllNodesTime } from './nodeHelpers';
+import {
+  incrementAllNodeElectionCounts, postAllElectionStartedBy,
+  postElectionMessage, postMainProcessInfo, setAllNodesTime,
+} from './nodeHelpers';
 
 const node:ProcessNode = JSON.parse(process.argv[2]);
 const ipAddress:string = getIPAddress();
@@ -26,13 +29,29 @@ const coordinateNodes = () => {
   if (node.isCoordinator === true && !isfrozen) {
     heartbeatCounter += 1;
     setAllNodesTime(node);
+    postAllElectionStartedBy({ ...node, electionStartedBy: -1 });
   }
 };
 
-let electionInProgress = false;
+const declareElectionEnded = () => {
+  postMainProcessInfo(node.mainProcessIpAddress, `Node ${node.id} is now the coordinator. Election started by ${node.electionStartedBy}`);
+  node.isCoordinator = true;
+  node.isElecting = false;
+  node.electionCount += 1;
+  node.electionStartedBy = -1;
+  incrementAllNodeElectionCounts(node);
+  postAllElectionStartedBy({ ...node, electionStartedBy: -1 });
+};
+
 const startElection = () => {
-  if (node.isElecting === true && !electionInProgress && !isfrozen) {
-    electionInProgress = true;
+  node.electionStartedBy = node.id;
+  postAllElectionStartedBy(node);
+};
+const handleElection = () => {
+  if (node.isElecting === true && !isfrozen) {
+    if (node.electionStartedBy === -1) {
+      startElection();
+    }
     node.time = format(getDate(node.originalTime), 'K:mmaaa');
     d = getDate(node.originalTime);
     const higherNodeIds = node.allNodeIds.filter((nodeId) => nodeId > node.id);
@@ -41,7 +60,6 @@ const startElection = () => {
       try {
         const statusCode = await postElectionMessage(nodeId, node);
         if (statusCode === 200) {
-          console.log('GOT 200 from higher node');
           higherNodesCounter += 1;
           node.isElecting = false;
           node.isCoordinator = false;
@@ -50,26 +68,19 @@ const startElection = () => {
         console.log(`Node ${nodeId} is unresponsive`);
       }
     });
-    // TODO fix hack around awaiting ElectionMessage status codes.Currently 2000ms is as timeout.
+    // TODO fix hack around awaiting ElectionMessage status codes.Currently 500ms is as timeout.
     setTimeout(() => {
-      console.log('In SetTimeout');
-      if (higherNodesCounter === 0) {
-        console.log(`node ${node.id} is now the coordinator`);
-        node.isCoordinator = true;
-        node.isElecting = false;
+      if (higherNodesCounter === 0 && node.electionStartedBy !== -1) {
+        declareElectionEnded();
       }
-    }, 2000);
-    electionInProgress = false;
+    }, 500);
   }
 };
 
 // TODO: Set interval from 5000ms to 60000ms after debugging finished
 setInterval(makeNodeClockTick, 5000);
 setInterval(coordinateNodes, 1000);
-setInterval(startElection, 1000);
-
-console.log(node);
-console.log(ipAddress);
+setInterval(handleElection, 1000);
 
 const app = express();
 const port = 3000;
@@ -94,8 +105,8 @@ const handleMultipleCoordinators = () => {
 };
 
 setTimeout(() => {
-  setInterval(checkHeartBeat, 5000);
-}, 10000);
+  setInterval(checkHeartBeat, 10000);
+}, 5000 + node.id * 2000);
 app.post('/time', (req, res) => {
   if (!isfrozen) {
     const { isFromNode, time } = req.body;
@@ -122,11 +133,17 @@ app.post('/isElecting', (req, res) => {
     node.isElecting = isElecting;
   }
 });
-app.post('/electionCount', (req, res) => {
-  if (!isfrozen) {
-    const { electionCount } = req.body;
-    res.send(`old Time: ${node.electionCount} \n new Time: ${electionCount}`);
-    node.electionCount = electionCount;
+app.post('/incrementElectionCount', (req, res) => {
+  if (!isfrozen && node.electionStartedBy !== -1) {
+    res.send(`incremented ElectionCount to ${node.electionCount + 1}`);
+    node.electionCount += 1;
+  }
+});
+app.post('/electionStartedBy', (req, res) => {
+  if (!isfrozen && node.electionStartedBy === -1) {
+    const { electionStartedBy } = req.body;
+    res.send(`old electionStartedBy: ${node.electionStartedBy} \n new electionStartedBy: ${electionStartedBy}`);
+    node.electionStartedBy = electionStartedBy;
   }
 });
 app.post('/allNodeIds', (req, res) => {

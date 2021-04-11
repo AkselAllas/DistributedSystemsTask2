@@ -7,4 +7,6 @@ export interface ProcessNode {
     isCoordinator: boolean;
     isElecting: boolean;
     originalTime: string;
+    electionStartedBy: number;
+    mainProcessIpAddress: string;
 }

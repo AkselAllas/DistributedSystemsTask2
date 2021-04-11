@@ -3,7 +3,7 @@ import { Promise as BluebirdPromise } from 'bluebird';
 import lineReader from 'line-reader';
 import { ProcessNode } from './types';
 
-const parseAndConstructNode = (line:string) => {
+const parseAndConstructNode = (line:string, mainProcessIpAddress:string) => {
   const split = line.replace(/\s/g, '').split(',');
   const processIdentifiers = split[1].split('_');
   const electionNumberParse = parseInt(processIdentifiers[1], 10);
@@ -17,6 +17,8 @@ const parseAndConstructNode = (line:string) => {
     isCoordinator: false,
     isElecting: false,
     originalTime: split[2],
+    electionStartedBy: -1,
+    mainProcessIpAddress,
   };
   return node;
 };
@@ -37,14 +39,14 @@ const addCorrectAllNodeIdsToProperties = (properties: ProcessNode[], allNodeIds:
   return correctProperties;
 };
 
-const readPropertiesFromFile = async (path: fs.PathLike) => {
+const readPropertiesFromFile = async (path: fs.PathLike, mainProcessIpAddress: string) => {
   if (!fs.existsSync(path)) {
     throw new Error(`Failed to read file: ${path}`);
   }
   const initialProperties:ProcessNode[] = [];
   const promisedEachLine: any = BluebirdPromise.promisify(lineReader.eachLine);
   await promisedEachLine(path, (line: any) => {
-    const nodeInfo:ProcessNode = parseAndConstructNode(line);
+    const nodeInfo:ProcessNode = parseAndConstructNode(line, mainProcessIpAddress);
     initialProperties.push(nodeInfo);
   });
 

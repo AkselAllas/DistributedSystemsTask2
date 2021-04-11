@@ -1,5 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import requestify from 'requestify';
+import express from 'express';
+import bodyParser from 'body-parser';
 import { ProcessNode } from './types';
 
 export const nodeById = (
@@ -37,5 +39,19 @@ export const clock = async (allNodeIds:number[]) => {
     } catch (e) {
       console.log(`Node ${nodeId} is unresponsive`);
     }
+  });
+};
+
+export const listenForNodeMessages = () => {
+  const app = express();
+  const port = 3000;
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
+
+  app.post('/', (req:any) => {
+    const { stringMessage } = req.body;
+    console.log(stringMessage);
+  });
+  app.listen(port, () => {
   });
 };

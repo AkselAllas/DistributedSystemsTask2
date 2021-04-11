@@ -1,11 +1,15 @@
 import { createDockerContainer } from './dockerHelpers';
 import readPropertiesFromFile from './readPropertiesFromFile';
 import { ProcessNode } from './types';
-import { nodeById, postNodeIsCoordinator, postNodeTime } from './mainHelpers';
+import {
+  listenForNodeMessages, nodeById, postNodeIsCoordinator, postNodeTime,
+} from './mainHelpers';
 import { createCLI } from './cliHelpers';
+import { getIPAddress } from './miscHelpers';
 
 const main = async () => {
-  const properties:ProcessNode[] = await readPropertiesFromFile(process.argv[2]);
+  const ipAddress:string = getIPAddress();
+  const properties:ProcessNode[] = await readPropertiesFromFile(process.argv[2], ipAddress);
   const sortedNodeIds = properties[0].allNodeIds.sort((a, b) => b - a);
   const biggestProcessId = sortedNodeIds[0];
   await Promise.all(properties.map((node) => createDockerContainer(node)));
@@ -16,6 +20,7 @@ const main = async () => {
   }, 1000);
   console.log('Coordinator is node with processId: ', biggestProcessId);
   createCLI(sortedNodeIds);
+  listenForNodeMessages();
 };
 
 export default main;
