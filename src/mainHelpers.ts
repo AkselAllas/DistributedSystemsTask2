@@ -95,8 +95,10 @@ export const reload = async () => {
 
   setTimeout(() => {
     postNodeIsCoordinator({ ...nodeById(properties, biggestProcessId), isCoordinator: true });
-    postNodeTime({ ...nodeById(properties, biggestProcessId), time: nodeById(properties, biggestProcessId).originalTime });
     postAllAllNodeIds(nodeById(properties, biggestProcessId));
+    setTimeout(() => {
+      postNodeTime({ ...nodeById(properties, biggestProcessId), time: nodeById(properties, biggestProcessId).originalTime });
+    }, 2000);
   }, 1500);
   console.log('Coordinator is node with processId: ', biggestProcessId);
 
