@@ -128,7 +128,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/time', (req, res) => {
-  if (isCorrectlyUnfrozen()) {
+  if (!node.isFrozen) {
     const { isFromNode, time } = req.body;
     if (isFromNode) {
       heartbeatCounter += 1;
@@ -143,14 +143,14 @@ app.post('/time', (req, res) => {
   }
 });
 app.post('/isCoordinator', (req, res) => {
-  if (isCorrectlyUnfrozen()) {
+  if (!node.isFrozen) {
     const { isCoordinator } = req.body;
     res.send(`old isCoordinator: ${node.isCoordinator} \n new isCoordinator: ${isCoordinator}`);
     node.isCoordinator = isCoordinator;
   }
 });
 app.post('/isElecting', (req, res) => {
-  if (isCorrectlyUnfrozen()) {
+  if (!node.isFrozen) {
     const { isElecting } = req.body;
     res.send(`old isElecting: ${node.isElecting} \n new isElecting: ${isElecting}`);
     console.log(`${Date.now()} I GOT SET electing from ${JSON.stringify(req.connection.remoteAddress)} and node is: ${JSON.stringify(node)}`);
@@ -160,13 +160,13 @@ app.post('/isElecting', (req, res) => {
   }
 });
 app.post('/incrementElectionCount', (req, res) => {
-  if (isCorrectlyUnfrozen() && node.electionStartedBy !== -1) {
+  if (!node.isFrozen && node.electionStartedBy !== -1) {
     res.send(`incremented ElectionCount to ${node.electionCount + 1}`);
     node.electionCount += 1;
   }
 });
 app.post('/electionStartedBy', (req, res) => {
-  if (isCorrectlyUnfrozen() && node.electionStartedBy === -1) {
+  if (!node.isFrozen && node.electionStartedBy === -1) {
     const { electionStartedBy } = req.body;
     res.send(`old electionStartedBy: ${node.electionStartedBy} \n new electionStartedBy: ${electionStartedBy}`);
     node.electionStartedBy = electionStartedBy;
