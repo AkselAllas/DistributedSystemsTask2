@@ -166,7 +166,9 @@ app.post('/unfreeze', () => {
   console.log(`${Date.now()} unfreeze`);
   node.isFrozen = false;
   postNodeIsCoordinator({ ...node, isCoordinator: true });
-  postNodeTime({ ...node, time: node.originalTime });
+  setTimeout(() => {
+    postNodeTime({ ...node, time: node.originalTime });
+  }, 2000);
 });
 app.post('/allNodeIds', (req, res) => {
   if (!node.isFrozen) {
