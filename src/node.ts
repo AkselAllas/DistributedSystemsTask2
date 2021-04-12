@@ -95,8 +95,8 @@ const checkHeartBeat = () => {
 const handleMultipleCoordinators = () => {
   if (node.isCoordinator) {
     console.log(`${Date.now()} HANDLING MULTIPLE COORDINATORS ${JSON.stringify(node)}`);
-
     node.isElecting = true;
+    setTimeout(() => { node.time = node.originalTime; }, 2000);
   }
 };
 
