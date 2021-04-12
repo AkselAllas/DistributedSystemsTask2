@@ -85,7 +85,7 @@ const handleElection = () => {
 
 const checkHeartBeat = () => {
   console.log(`Iam node ${node.id}, heartbeatCounter ${heartbeatCounter}, date: ${Date.now()}`);
-  if ((heartbeatCounter === 0 || node.isElecting === true) && hasMoreThan5SecPassedFromLastElection()) {
+  if ((heartbeatCounter === 0 || node.isElecting === true) && hasMoreThan5SecPassedFromLastElection() && !node.isFrozen) {
     node.isElecting = true;
     handleElection();
   }
@@ -95,6 +95,14 @@ const checkHeartBeat = () => {
 const handleMultipleCoordinators = () => {
   if (node.isCoordinator) {
     console.log(`${Date.now()} HANDLING MULTIPLE COORDINATORS ${JSON.stringify(node)}`);
+    node.isElecting = true;
+    setTimeout(() => { node.time = node.originalTime; }, 2000);
+  }
+};
+
+const handleUnFrozenHigherIdNode = (req:any) => {
+  const fromIp = req.connection.remoteAddress ?? '';
+  if (parseInt(fromIp.split('.')[3], 10) < node.id) {
     node.isElecting = true;
     setTimeout(() => { node.time = node.originalTime; }, 2000);
   }
@@ -121,7 +129,10 @@ app.post('/time', (req, res) => {
     const { isFromNode, time } = req.body;
     if (isFromNode) {
       heartbeatCounter += 1;
-      if (hasMoreThan5SecPassedFromLastElection()) handleMultipleCoordinators();
+      if (hasMoreThan5SecPassedFromLastElection()) {
+        handleMultipleCoordinators();
+        handleUnFrozenHigherIdNode(req);
+      }
     }
     res.send(`old Time: ${node.time} \n new Time: ${time}`);
     node.time = time;
