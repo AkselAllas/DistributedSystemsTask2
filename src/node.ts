@@ -138,8 +138,13 @@ app.post('/time', (req, res) => {
       }
     }
     res.send(`old Time: ${node.time} \n new Time: ${time}`);
-    node.time = time;
-    d = getDate(time);
+    if (!isFromNode) {
+      node.time = time;
+      d = getDate(time);
+    } else if (!node.isCoordinator) {
+      node.time = time;
+      d = getDate(time);
+    }
   }
 });
 app.post('/isCoordinator', (req, res) => {

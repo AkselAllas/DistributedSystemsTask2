@@ -49,6 +49,7 @@ const recursiveUserInput = (rl:any, sortedNodeIds:number[]) => {
         isCoordinator: false,
         isElecting: false,
         originalTime: args[2],
+        isFromNode: false,
       });
     }
     if (args[0] === 'kill') {
