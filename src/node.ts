@@ -165,17 +165,19 @@ app.post('/freeze', () => {
 app.post('/unfreeze', () => {
   console.log(`${Date.now()} unfreeze`);
   node.isFrozen = false;
-  postNodeIsCoordinator({ ...node, isCoordinator: true });
-  setTimeout(() => {
-    postNodeTime({ ...node, time: node.originalTime });
-  }, 2000);
+
+  const higherNodeIds = node.allNodeIds.filter((nodeId) => nodeId > node.id);
+  if (higherNodeIds.length === 0) {
+    postNodeIsCoordinator({ ...node, isCoordinator: true });
+    setTimeout(() => {
+      postNodeTime({ ...node, time: node.originalTime });
+    }, 2000);
+  }
 });
 app.post('/allNodeIds', (req, res) => {
-  if (!node.isFrozen) {
-    const { allNodeIds } = req.body;
-    res.send(`old NodeIds: ${node.allNodeIds} \n new NodeIds: ${allNodeIds}`);
-    node.allNodeIds = allNodeIds;
-  }
+  const { allNodeIds } = req.body;
+  res.send(`old NodeIds: ${node.allNodeIds} \n new NodeIds: ${allNodeIds}`);
+  node.allNodeIds = allNodeIds;
 });
 
 app.listen(port, () => {
