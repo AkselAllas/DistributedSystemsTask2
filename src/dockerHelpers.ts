@@ -31,8 +31,8 @@ export const stopAndRemoveAllDockerContainers = () => {
 export const stopAndRemoveDocker = (id:number) => {
   console.log(`Stopping and removing docker container with id: ${id}`);
   exec(
-    `docker container stop $(docker container ls -a --filter name=dst2-${id}) ; docker container rm $(docker container ls -a --filter name=dst2-${id})`,
-    (error, stdout, stdin) => {
+    `docker container stop dst2-${id} ; docker container rm dst2-${id}`,
+    () => {
       setTimeout(() => {
         console.log(`Docker container ${id} removed`);
       }, 2000);
